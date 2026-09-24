@@ -2,6 +2,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "PacmanApplication",
+      "request": "launch",
+      "mainClass": "Iuer.example.Pacman.PacmanApplication",
+      "projectName": "Pacman"
+    },
+    {
+      "type": "java",
       "name": "Spring Boot-PacmanApplication<demo>",
       "request": "launch",
       "cwd": "${workspaceFolder}",

@@ -6,7 +6,7 @@ public class TreeIndex<K extends Comparable<K>, V> {
         K key;
         V value;
         Node left, right;
-        int height = 1;
+        int height = 1; 
 
         Node(K key, V value) {
             this.key = key;
@@ -86,7 +86,7 @@ public class TreeIndex<K extends Comparable<K>, V> {
         erased = false;
         root = erase(root, key);
         if (erased) count--;
-        return false;
+        return erased;
     }
 
     public int size() {

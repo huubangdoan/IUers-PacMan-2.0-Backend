@@ -27,9 +27,37 @@ public class TreeIndex<K extends Comparable<K>, V> {
     return n;
 }
 
+    private Node erase(Node n, K key) {
+        if (n == null) return null;               
+
+        int c = key.compareTo(n.key);
+        if (c < 0) {
+            n.left = erase(n.left, key);
+        } else if (c > 0) {
+           n.right = erase(n.right, key);
+        } else {
+            erased = true;                         
+
+            if (n.left == null) return n.right;    
+            if (n.right == null) return n.left;    
+
+            Node s = minNode(n.right);
+            n.key = s.key;
+            n.value = s.value;
+            n.right = erase(n.right, s.key);
+        }
+        return n;
+    }
+
+    private Node minNode(Node n) {
+        while (n.left != null) n = n.left;
+        return n;
+    }
+
     private Node root;
     private int count = 0;
     private boolean inserted;
+    private boolean erased;
 
     public boolean insert(K key, V value) {
         inserted = false;
@@ -55,6 +83,9 @@ public class TreeIndex<K extends Comparable<K>, V> {
 }
 
     public boolean erase(K key) {
+        erased = false;
+        root = erase(root, key);
+        if (erased) count--;
         return false;
     }
 
@@ -63,5 +94,14 @@ public class TreeIndex<K extends Comparable<K>, V> {
     }
 
     public void inorder() {
+        inorder(root);
+        System.out.println();
+    }
+
+    private void inorder(Node n) {
+        if (n == null) return;
+        inorder(n.left);                   
+        System.out.print(n.key + " ");     
+        inorder(n.right);                  
     }
 }

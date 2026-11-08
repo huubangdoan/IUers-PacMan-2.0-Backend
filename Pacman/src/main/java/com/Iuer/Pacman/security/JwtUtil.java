@@ -4,7 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
+import java.util.UUID;
 import java.security.Key;
 import java.util.Date;
 
@@ -22,6 +22,7 @@ public class JwtUtil {
 
     public String generateToken(String username, String role) {
         return Jwts.builder()
+                .setId(UUID.randomUUID().toString())     
                 .setSubject(username)
                 .claim("role", role)
                 .setIssuedAt(new Date())

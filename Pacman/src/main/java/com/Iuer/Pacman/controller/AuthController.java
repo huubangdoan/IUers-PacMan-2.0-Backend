@@ -1,9 +1,12 @@
 package com.Iuer.Pacman.controller;
 
+import com.Iuer.Pacman.denylist.DenyListService;          
 import com.Iuer.Pacman.dto.*;
 import com.Iuer.Pacman.entity.User;
 import com.Iuer.Pacman.repository.UserRepository;
 import com.Iuer.Pacman.security.JwtUtil;
+import io.jsonwebtoken.Claims;                             
+import io.jsonwebtoken.JwtException;                       
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,8 +19,9 @@ public class AuthController {
     @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private JwtUtil jwtUtil;
+    @Autowired private DenyListService denyList;           
 
-    // ĐĂNG KÝ
+    
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         if (userRepository.existsByUsername(req.getUsername())) {
@@ -26,14 +30,14 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(req.getUsername());
-        user.setPassword(passwordEncoder.encode(req.getPassword())); // mã hóa mật khẩu
+        user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setRole("USER");
 
         userRepository.save(user);
         return ResponseEntity.ok("Đăng ký thành công");
     }
 
-    // ĐĂNG NHẬP
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         User user = userRepository.findByUsername(req.getUsername())
@@ -45,5 +49,20 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
         return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getRole()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader("Authorization") String header) {
+        if (!header.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body("Thiếu token");
+        }
+        try {
+            Claims claims = jwtUtil.extractAllClaims(header.substring(7));
+            long remaining = claims.getExpiration().getTime() - System.currentTimeMillis();
+            denyList.deny(claims.getId(), remaining);                 // TTL = thời gian còn lại của token
+            return ResponseEntity.ok("Đăng xuất thành công");
+        } catch (JwtException | IllegalArgumentException e) {
+            return ResponseEntity.status(401).body("Token không hợp lệ");
+        }
     }
 }

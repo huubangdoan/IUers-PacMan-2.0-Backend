@@ -54,15 +54,23 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String header) {
         if (!header.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body("Thiếu token");
+            return ResponseEntity.badRequest().body("Missing token");
         }
+
         try {
             Claims claims = jwtUtil.extractAllClaims(header.substring(7));
+
+            if (claims.getId() == null) {
+                return ResponseEntity.badRequest().body("Old token, please log in again.");
+            }
+
+
             long remaining = claims.getExpiration().getTime() - System.currentTimeMillis();
-            denyList.deny(claims.getId(), remaining);                 // TTL = thời gian còn lại của token
-            return ResponseEntity.ok("Đăng xuất thành công");
+            denyList.deny(claims.getId(), remaining);
+            return ResponseEntity.ok("Logout successful");
+
         } catch (JwtException | IllegalArgumentException e) {
-            return ResponseEntity.status(401).body("Token không hợp lệ");
-        }
+        return ResponseEntity.status(401).body("Invalid token");
     }
+}
 }

@@ -73,4 +73,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.equals("/api/auth/register") || path.equals("/api/auth/login");
+    }
 }

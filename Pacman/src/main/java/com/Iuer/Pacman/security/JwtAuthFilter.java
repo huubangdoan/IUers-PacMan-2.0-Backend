@@ -1,13 +1,13 @@
 package com.Iuer.Pacman.security;
 
-import com.Iuer.Pacman.denylist.DenyListService;              // MỚI
-import io.jsonwebtoken.Claims;                                  // MỚI
+import com.Iuer.Pacman.denylist.DenyListService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;             // MỚI
+import org.springframework.dao.DataAccessException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,11 +20,13 @@ import java.util.List;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final DenyListService denyList;
 
-    @Autowired
-    private DenyListService denyList;                           // MỚI
+    public JwtAuthFilter(JwtUtil jwtUtil, DenyListService denyList) {
+        this.jwtUtil = jwtUtil;
+        this.denyList = denyList;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -36,32 +38,30 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
-            // 1. Kiểm tra chữ ký + hạn dùng (như cũ)
-            if (jwtUtil.validateToken(token)) {
+            try {
                 Claims claims = jwtUtil.extractAllClaims(token);
 
-                // 2. MỚI: kiểm tra JTI có trong denylist không
-                try {
-                    if (denyList.isDenied(claims.getId())
-                            || denyList.isIssuedBeforeRevoke(claims.getSubject(), claims.getIssuedAt())) {
-                        reject(response, HttpServletResponse.SC_UNAUTHORIZED, "Token đã bị thu hồi");
-                        return; // dừng, không cho đi tiếp
-                    }
-                } catch (DataAccessException e) {
-                    // Redis lỗi: từ chối thay vì cho qua, để token đã thu hồi không lọt vào
-                    reject(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Dịch vụ tạm thời gián đoạn");
+                if (denyList.isDenied(claims.getId())
+                        || denyList.isIssuedBeforeRevoke(claims.getSubject(), claims.getIssuedAt())) {
+                    reject(response, HttpServletResponse.SC_UNAUTHORIZED, "Token đã bị thu hồi");
                     return;
                 }
 
-                // 3. Token hợp lệ và chưa bị thu hồi: xác thực như cũ
                 String username = claims.getSubject();
                 String role = claims.get("role", String.class);
 
-                var auth = new UsernamePasswordAuthenticationToken(
-                        username, null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                );
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                if (username != null && role != null) {
+                    var auth = new UsernamePasswordAuthenticationToken(
+                            username, null,
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            } catch (JwtException | IllegalArgumentException e) {
+                // Token không hợp lệ hoặc hết hạn -> không set authentication để security entrypoint xử lý
+            } catch (DataAccessException e) {
+                reject(response, HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Dịch vụ xác thực tạm thời gián đoạn");
+                return;
             }
         }
 

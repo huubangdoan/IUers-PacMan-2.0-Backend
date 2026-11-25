@@ -62,7 +62,7 @@ jobs:
           DB_PASSWORD: pacman
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-        run: ./mvnw --batch-mode --no-transfer-progress test
+        run: bash ./mvnw --batch-mode --no-transfer-progress test
 
   report-failure:
     if: ${{ failure() && github.event_name == 'schedule' }}

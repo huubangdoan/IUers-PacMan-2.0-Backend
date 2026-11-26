@@ -2,11 +2,9 @@ package com.Iuer.Pacman.game;
 
 import java.util.Map;
 
-
-
 /** Server-authoritative map and mode catalog; keep grid data aligned with the frontend catalog. */
 public final class GameMapCatalog {
-    public record GameMap(String id, int[][] grid, int playerRow, int playerCol, int pointsPerDot,double playerSpeed) {}
+    public record GameMap(String id, int[][] grid, int playerRow, int playerCol, int pointsPerDot) {}
     public record GameMode(String id, String mapId, int pointsPerDot) {}
 
     private static final int[][] CLASSIC_GRID = {
@@ -44,8 +42,8 @@ public final class GameMapCatalog {
     };
 
     private static final Map<String, GameMap> MAPS = Map.of(
-            "classic", new GameMap("classic", CLASSIC_GRID, 10, 10, 10,5.0),
-            "compact", new GameMap("compact", COMPACT_GRID, 4, 4, 10,6.25)
+            "classic", new GameMap("classic", CLASSIC_GRID, 10, 10, 10),
+            "compact", new GameMap("compact", COMPACT_GRID, 4, 4, 10)
     );
     private static final Map<String, GameMode> MODES = Map.of(
             "classic", new GameMode("classic", "classic", 10),
@@ -65,7 +63,4 @@ public final class GameMapCatalog {
         if (map == null) throw new IllegalArgumentException("Unknown game map");
         return map;
     }
-
-    
-        
 }

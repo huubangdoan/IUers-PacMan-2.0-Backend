@@ -20,4 +20,4 @@ jobs:
 
           curl --fail --silent --show-error \
             --retry 2 --retry-delay 10 --retry-all-errors \
-            --max-time 30 "$BACKEND_HEALTH_URL"
+            --max-time 60 "$BACKEND_HEALTH_URL"

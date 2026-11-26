@@ -1,5 +1,5 @@
 package com.Iuer.Pacman.entity;
-
+import java.util.UUID; 
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -12,7 +12,7 @@ public class GameplayResult {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
 
     @Column(name = "map_name", nullable = false)
     private String mapName;
@@ -40,8 +40,8 @@ public class GameplayResult {
     private Instant endedAt;
 
     public Long getId() { return id; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
     public String getMapName() { return mapName; }
     public void setMapName(String mapName) { this.mapName = mapName; }
     public String getGameMode() { return gameMode; }

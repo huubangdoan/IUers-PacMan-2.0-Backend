@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-PacmanApplication<Pacman>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.Iuer.Pacman.PacmanApplication",
+            "projectName": "Pacman",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

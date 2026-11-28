@@ -1,6 +1,6 @@
 package com.Iuer.Pacman.config;
 
-import com.Iuer.Pacman.game.GameWebSocketHandler;
+import com.Iuer.Pacman.game.GameWebSocketHandlerV2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -13,11 +13,11 @@ import java.util.List;
 @Configuration
 @EnableWebSocket
 public class GameWebSocketConfig implements WebSocketConfigurer {
-    private final GameWebSocketHandler handler;
+    private final GameWebSocketHandlerV2 handler;
     private final List<String> allowedOrigins;
 
     public GameWebSocketConfig(
-            GameWebSocketHandler handler,
+            GameWebSocketHandlerV2 handler,
             @Value("${app.websocket.allowed-origins:http://localhost:5173}") String origins
     ) {
         this.handler = handler;

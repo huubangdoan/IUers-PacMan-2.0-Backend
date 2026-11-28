@@ -1,16 +1,26 @@
 package com.Iuer.Pacman.game;
 
 import com.Iuer.Pacman.service.GameStateService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.function.LongSupplier;
 
 @Service
 public class MoveService {
     private final GameStateService gameStateService;
+    private final LongSupplier nanoClock;
 
+    @Autowired
     public MoveService(GameStateService gameStateService) {
+        this(gameStateService, System::nanoTime);
+    }
+
+    // Có tham số đồng hồ để test được
+    public MoveService(GameStateService gameStateService, LongSupplier nanoClock) {
         this.gameStateService = gameStateService;
+        this.nanoClock = nanoClock;
     }
 
     public MoveResult process(PlayerState player, MoveRequest request) {
@@ -18,11 +28,13 @@ public class MoveService {
 
         // Điều kiện được kiểm tra theo đúng thứ tự (dừng sớm) như code gốc,
         // nên Redis chỉ bị gọi khi ô đích là tường và các điều kiện trước đó đã đúng.
+        // Kiểm tra tốc độ đặt CUỐI CÙNG: chỉ bước đi hợp lệ mới tốn token.
         boolean accepted = request.sequence() == player.sequence() + 1
                 && direction != null
                 && request.row() == player.row() + direction.rowDelta()
                 && request.col() == player.col() + direction.colDelta()
-                && isOpen(player, request.row(), request.col());
+                && isOpen(player, request.row(), request.col())
+                && player.moveLimiter().tryConsume(nanoClock.getAsLong());
 
         player.advanceSequenceTo(request.sequence());
         if (accepted) {
